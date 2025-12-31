@@ -4,7 +4,7 @@ import google.generativeai as genai
 # --- ၁။ Page Configuration ---
 st.set_page_config(page_title="AI Myanmar Script Writer", layout="wide")
 
-# --- ၂။ CSS: Toolbar များကို ဖျောက်ခြင်း ---
+# --- ၂။ CSS: Toolbar ဖျောက်ခြင်း ---
 st.markdown("""
     <style>
     [data-testid="stHeader"] {display:none !important;}
@@ -16,21 +16,24 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# --- ၃။ Initialize Model ---
-# Secrets ထဲက Key ကို ယူပြီး model ကို အရင်ဆောက်ထားပါမယ်
+# --- ၃။ Initialize API & Model ---
 try:
     if "GEMINI_API_KEY" in st.secrets:
-        key = st.secrets["GEMINI_API_KEY"]
-        genai.configure(api_key=key)
+        # ပုံ (1wd.png) ထဲကအတိုင်း Key ကို ယူသုံးပါမယ်
+        api_key = st.secrets["GEMINI_API_KEY"]
+        genai.configure(api_key=api_key)
+        
+        # Model နာမည်ကို ပိုသေချာအောင် ပြင်ရေးထားပါတယ်
+        # 'gemini-1.5-flash' သို့မဟုတ် 'models/gemini-1.5-flash'
         model = genai.GenerativeModel('gemini-1.5-flash')
     else:
-        st.error("Secrets ထဲမှာ GEMINI_API_KEY ကို ရှာမတွေ့ပါ။")
+        st.error("Secrets ထဲမှာ GEMINI_API_KEY ကို မတွေ့ပါ။")
         st.stop()
 except Exception as e:
     st.error(f"Setup Error: {e}")
     st.stop()
 
-# --- ၄။ UI Components ---
+# --- ၄။ UI Design ---
 st.title("🎭 AI မြန်မာဇာတ်ညွှန်းရေးဆရာ")
 
 with st.sidebar:
@@ -43,16 +46,23 @@ topic = st.text_area("ဇာတ်လမ်းအကြောင်းအရာ:
 # --- ၅။ Generation Logic ---
 if st.button("ဇာတ်ညွှန်းထုတ်ရန်"):
     if topic:
-        with st.spinner('AI က ရေးပေးနေပါတယ်...'):
+        with st.spinner('AI က ဇာတ်လမ်း စဉ်းစားနေပါတယ်...'):
             try:
-                # model ကို ဒီနေရာကနေ သေချာပေါက် ခေါ်သုံးလို့ရပါပြီ
-                prompt = f"Write a {genre} movie script about {topic} in natural Myanmar spoken language. Length: {length}."
-                response = model.generate_content(prompt)
+                # Prompt ကို ပိုရှင်းအောင် ရေးထားပါတယ်
+                full_prompt = f"Write a {genre} movie script about {topic} in natural Myanmar spoken language. Format as a professional screenplay. Length: {length}."
                 
-                st.markdown("---")
-                st.subheader("✨ ထွက်ပေါ်လာသော ဇာတ်ညွှန်း")
-                st.markdown(response.text)
+                # Content ထုတ်လုပ်ခြင်း
+                response = model.generate_content(full_prompt)
+                
+                if response.text:
+                    st.markdown("---")
+                    st.subheader("✨ ထွက်ပေါ်လာသော ဇာတ်ညွှန်း")
+                    st.markdown(response.text)
+                else:
+                    st.error("AI က အဖြေမထုတ်ပေးနိုင်ပါဘူး။ ကျေးဇူးပြု၍ ပြန်စမ်းကြည့်ပါ။")
             except Exception as e:
+                # 404 Error တက်ရင် model နာမည်ကို အလိုအလျောက် ပြန်စစ်တဲ့အပိုင်း
                 st.error(f"Generation Error: {e}")
+                st.info("API Key သို့မဟုတ် Model Version ကြောင့် ဖြစ်နိုင်ပါတယ်။")
     else:
         st.warning("အကြောင်းအရာ တစ်ခုခု အရင်ရိုက်ထည့်ပါ။")
