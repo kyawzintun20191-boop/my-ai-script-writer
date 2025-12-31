@@ -1,60 +1,45 @@
 import streamlit as st
 import google.generativeai as genai
 
-# ၁။ သင့်ရဲ့ API Key ကို ဒီမှာ ထည့်ပါ
-API_KEY = "AIzaSyBRiv9KJyq3cKU70QxrNeVZ_8jQVL7FNqU"
+# API Key ကို Secrets ကနေ ယူပါ (Settings > Secrets ထဲမှာ GEMINI_API_KEY ဆိုပြီး ထည့်ထားပေးရပါမယ်)
+try:
+    API_KEY = st.secrets["AIzaSyBRiv9KJyq3cKU70QxrNeVZ_8jQVL7FNqU"]
+except:
+    st.error("Secrets ထဲမှာ API Key ထည့်ဖို့ မေ့နေပါတယ်!")
+    st.stop()
 
 st.set_page_config(page_title="AI Myanmar Script Writer", page_icon="🎬", layout="wide")
 
-# --- CSS: Toolbar များကိုသာ သီးသန့်ရွေးဖျောက်ခြင်း ---
-hide_all_style = """
-            <style>
-            /* အပေါ်က ဘားတန်းတစ်ခုလုံးကို ဖျောက်ခြင်း */
-            [data-testid="stHeader"] {display:none !important;}
-            
-            /* ခဲတံပုံ (Deploy Button) ကို ဖျောက်ခြင်း */
-            .stAppDeployButton {display:none !important;}
-            
-            /* GitHub Icon နှင့် Status Widget ကို ဖျောက်ခြင်း */
-            [data-testid="stStatusWidget"] {display:none !important;}
-            
-            /* Footer ကို ဖျောက်ခြင်း */
-            footer {display: none !important;}
-            
-            /* စာသားတွေ အပေါ်ကပ်မနေအောင် နေရာချခြင်း */
-            .main .block-container {
-                padding-top: 3rem;
-            }
-            </style>
-            """
-st.markdown(hide_all_style, unsafe_allow_html=True)
+# CSS: Toolbar တွေကိုပဲ သီးသန့်ဖျောက်ပြီး Title ကို ချန်ထားမယ်
+st.markdown("""
+    <style>
+    [data-testid="stHeader"] {display:none !important;}
+    .stAppDeployButton {display:none !important;}
+    [data-testid="stStatusWidget"] {display:none !important;}
+    footer {display: none !important;}
+    #MainMenu {visibility: hidden;}
+    .main .block-container { padding-top: 2rem; }
+    </style>
+    """, unsafe_allow_html=True)
 
-# --- Title ကို ပုံမှန် Header စာသားအဖြစ် ပြန်ရေးခြင်း ---
+# Title ကို ပုံမှန် စာသားအဖြစ် ရေးသားခြင်း
 st.title("🎭 AI မြန်မာဇာတ်ညွှန်းရေးဆရာ")
-st.write("လူရေးသလို သဘာဝကျတဲ့ မြန်မာဇာတ်ညွှန်းများ ဖန်တီးပေးပါသည်")
 
 try:
     genai.configure(api_key=API_KEY)
-    available_models = [m.name for m in genai.list_models() if 'generateContent' in m.supported_generation_methods]
-    model_name = "models/gemini-1.5-flash" if "models/gemini-1.5-flash" in available_models else available_models[0]
-    model = genai.GenerativeModel(model_name)
+    model = genai.GenerativeModel('gemini-1.5-flash')
 
-    # --- Sidebar ---
     with st.sidebar:
         st.title("🎬 Settings")
-        genre = st.selectbox(
-            "ဇာတ်လမ်းအမျိုးအစား:",
-            ["Drama", "Action", "Horror", "Comedy", "Romance", "Thriller"]
-        )
-        length = st.radio("ဇာတ်လမ်းအရှည်:", ["တိုတိုနှင့်လိုရင်း", "အသေးစိတ် ဇာတ်ညွှန်း"])
+        genre = st.selectbox("အမျိုးအစား:", ["Drama", "Action", "Horror", "Comedy"])
+        length = st.radio("အရှည်:", ["တိုတို", "အရှည်"])
 
-    # --- Main Page Content ---
-    topic = st.text_area("ဇာတ်လမ်းအကြောင်းအရာ:", height=150, placeholder="ဥပမာ - ရန်ကုန်မြို့က စုံထောက်တစ်ယောက်အကြောင်း")
+    topic = st.text_area("ဇာတ်လမ်းအကြောင်းအရာ:", placeholder="ဒီမှာ ရိုက်ထည့်ပါ...")
 
     if st.button("ဇာတ်ညွှန်းထုတ်ရန်"):
         if topic:
-            with st.spinner('ခဏစောင့်ပါ...'):
-                prompt = f"Act as a native Myanmar screenwriter. Write a {genre} script about {topic}. Use natural Burmese spoken language."
+            with st.spinner('AI က ဇာတ်လမ်း စဉ်းစားနေပါတယ်...'):
+                prompt = f"Write a {genre} movie script about {topic} in natural Myanmar spoken language."
                 response = model.generate_content(prompt)
                 st.markdown("---")
                 st.markdown(response.text)
