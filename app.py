@@ -14,6 +14,8 @@ st.set_page_config(
 # --- CSS: Toolbar, Header, Footer များ အပြီးအပိုင်ဖျောက်ရန် ---
 hide_st_style = """
             <style>
+            [data-testid="stStatusWidget"] {display:none;}
+.st-emotion-cache-1kyx60p {display:none;} /* GitHub icon class */
             #MainMenu {visibility: hidden;}
             footer {visibility: hidden;}
             header {visibility: hidden;}
@@ -90,3 +92,4 @@ try:
 except Exception as e:
     st.error(f"Error: {e}")
     st.info("API Key မှန်မမှန် သို့မဟုတ် အင်တာနက်ချိတ်ဆက်မှုကို စစ်ဆေးပေးပါ။")
+
